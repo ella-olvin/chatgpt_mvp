@@ -116,27 +116,4 @@ class Controller:
 
         if debug: print(f"Step 4: Response passed moderation check.")
 
-        # # Step 5: Ask the model if the response answers the initial user query well
-        # user_message = f"""
-        # Customer message: {delimiter}{user_input}{delimiter}
-        # Agent response: {delimiter}{final_response}{delimiter}
-
-        # Does the response answer the question or ask for more information? Reply with Yes or No and then a reason.
-        # """
-        # messages = [
-        #     {'role': 'system', 'content': system_message},
-        #     {'role': 'user', 'content': user_message}
-        # ]
-        # evaluation_response = self.ChatModel.get_completion_from_messages(messages)
-        # if debug: print(f"Step 5: Model evaluated the response. ")
-
-        # # Step 6: If yes, use this answer; if not, say that you will connect the user to a human
-        # if "Y" in evaluation_response:  # Using "in" instead of "==" to be safer for model output variation (e.g., "Y." or "Yes")
-        #     if debug: print("Step 6: Model approved the response.")
-        #     return final_response, self.startMessageStack
-        # else:
-        #     if debug: print(f"Step 6: Model disapproved the response. {final_response, evaluation_response}")
-        #     neg_str = "I'm unable to provide the information you're looking for. I'll connect you with a human representative for further assistance."
-        #     return neg_str, self.startMessageStack
-
         return final_response, self.startMessageStack
