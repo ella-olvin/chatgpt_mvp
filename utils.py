@@ -80,6 +80,29 @@ SQL_SYSTEM_MESSAGE_OLD = """
             When creating queries, use the stem of a place's name to increase the chances of matching results. \
             Remember to use 'LIKE' instead of '=' in WHERE conditions for better matching probabilities."
 """
+SQL_CHAIN_OF_THOUGHT_REASONING = f"""
+
+You will be provided with a customer query which you need to convert to a SQL query to access a database. 
+Information about the database:
+ 1. There are two tables available for querying: SGPlaceRaw and SGPlaceDailyVisitsRaw. 
+ 2. The SGPlaceRaw table contains the columns fk_sgplaces, name, top_category, street_address, region, city, and postal_code. \
+    The region field uses suffixes like NY, CT, or MA. All string columns are lowercase. \
+ 3. The SGPlaceDailyVisitsRaw table includes the columns fk_sgplaces, local_date, and visits. \
+ 4. To join the tables, use the fk_sgplaces column. \
+ 5. When creating queries, use the stem of a place's name to increase the chances of matching results. \
+ 6. Use 'LIKE' instead of '=' in WHERE conditions for better matching probabilities. 
+
+Follow these steps to answer the customer queries. 
+
+Step 1: You will be provided with a question which you must convert to a SQL Query using BigQuery Legacy SQL Syntax. \
+The query must be surrounded by delimiters #### 
+
+Step 2: Before querying the database using the query from Step 1 you must first find out if the values in the WHERE conditions will return non null values. 
+To do this you must create one unique query for each WHERE conditions.
+Each unique query must be surrounded by delimiters #### 
+
+"""
+
 WHERE_CONDITION_SQL_SYSTEM_MESSAGE = """
             You will be provided with a SQL query which you need to decompose to create new sql queries \
             that will be used to ensure the WHERE filter returns a non null result. \
@@ -105,20 +128,44 @@ WHERE_CONDITION_SQL_SYSTEM_MESSAGE = """
             ####SELECT count(*) from SGPlaceRaw where lower(city) like '%manhattan%'####
             """
 SQL_SYSTEM_MESSAGE = """
-            You will be provided with a question which you must convert to a SQL Query using BigQuery Legacy SQL Syntax. \
-            There are two tables available for querying: SGPlaceRaw and SGPlaceDailyVisitsRaw. \
-            The SGPlaceRaw table contains the columns fk_sgplaces, name, top_category, street_address, region, city, and postal_code. \
-            The region field uses suffixes like NY, CT, or MA. \
-            All string columns are lowercase. \
-            The SGPlaceDailyVisitsRaw table includes the columns fk_sgplaces, local_date, and visits. \
-            To join the tables, use the fk_sgplaces column. \
-            When creating queries, use the stem of a place's name to increase the chances of matching results. \
-            Use 'LIKE' instead of '=' in WHERE conditions for better matching probabilities. \
-            The query must be surrounded by delimiters #### like the example below:
+            You will be provided with a question which you must convert to a BigQuery Legacy SQL Syntax Query. \
+            Information about the database:
+              1. There are two tables available for querying: SGPlaceRaw and SGPlaceDailyVisitsRaw. 
+              2. The SGPlaceRaw table contains the columns fk_sgplaces, name, top_category, street_address, region, city, and postal_code. \
+                  The region field uses suffixes like 'ny', 'ct', or 'ma'. All string columns are lowercase. \
+              3. The SGPlaceDailyVisitsRaw table includes the columns fk_sgplaces, local_date, and visits. \
+              4. To join the tables, use the fk_sgplaces column. \
+              5. When creating queries, use the stem of a place's name to increase the chances of matching results. \
+              6. Use 'LIKE' instead of '=' in WHERE conditions for better matching probabilities. 
+              7. The current year is 2023. 
+            The whole query must be surrounded by delimiters #### like the example below:
 
             Q: What is the number of visits to McDonald's in 2022?
             A: ####SELECT SUM(visits) FROM llm_mvp.SGPlaceDailyVisitsRaw JOIN llm_mvp.SGPlaceRaw USING (fk_sgplaces) WHERE lower(SGPlaceRaw.name) LIKE '%mcdonald%' AND local_date >= '2022-01-01' AND local_date <= '2022-12-31'####
             """
+WHERE_CONDITIONS_SYSTEM_MESSAGES = f"""
+You will be provided with a SQL query.
+Before this SQL query can be used to query the database you need to ensure that the result will not return null. 
+
+Follow these steps to do this: 
+Step 1: Extract all the WHERE conditions from the query like this: 
+<WHERE_CONDITION>where lower(city) like '%manhattan%'<WHERE_CONDITION>
+<WHERE_CONDITION>where lower(regions) like '%ny%'<WHERE_CONDITION>
+
+Step 2: Create new SQL queries from the WHERE conditions that can be used to query the database individually, determining if a value exists for that condition.
+{delimiter}SELECT count(*) from SGPlaceRaw where lower(city) like '%manhattan%'{delimiter}
+{delimiter}SELECT count(*) from SGPlaceRaw where lower(region) like '%ny%'{delimiter}
+
+
+Use the following format:
+Step 1: <list of WHERE_CONDITION>
+Step 2: <list of new queries> 
+
+"""
+DATABASE_SYSTEM_MESSAGE = f"""
+You are a customer service assistant. Respond in a friendly and helpful tone, with very concise answers. 
+
+"""
 PRODUCT_DOCUMENTATION_SYSTEM_MESSAGE = f"""
         You are a customer service assistant for Olvin a Predictive analytics company \
         for retail and commercial real estate that uses location data and \

@@ -61,10 +61,10 @@ class Controller:
         match response["primary"]:
             case "Data Queries and Insights":
                 # BigQuery
-                final_response, sql_query = self.AccessDB.query_db(user_input, [d for d in self.startMessageStack[:-2] if d['role'] != 'system'])
-                if not final_response:
-                    # Direct to documentation
-                    response["primary"] = "Data Explanation"
+                final_response, sql_query, sql_output = self.AccessDB.query_db(user_input, [d for d in self.startMessageStack[:-2] if d['role'] != 'system'])
+                if not sql_output:
+                    # Direct to documentation if no output from SQL
+                    response["primary"] = "Data Generation and Characteristics"
                     return self.direct_user_message(user_input, response)
                 else:
                     system_message = SQL_MESSAGES[0]['content']
@@ -84,6 +84,7 @@ class Controller:
 
     def process_user_message(self, user_input, debug=True):
         # Step 1: Check input to see if it flags the Moderation API or is a prompt injection
+
         response = openai.Moderation.create(input=user_input)
         moderation_output = response["results"][0]
         if moderation_output["flagged"]:
@@ -100,6 +101,7 @@ class Controller:
         if debug: print(f"Step 2: User message classified. \n Classification: {response}")
         
         # Step 3: If message classified then answer the question
+
         final_response, system_message = self.direct_user_message(user_input, response)
 
         self.add_to_message_stack(final_response, "assistant")
@@ -114,25 +116,27 @@ class Controller:
 
         if debug: print(f"Step 4: Response passed moderation check.")
 
-        # Step 5: Ask the model if the response answers the initial user query well
-        user_message = f"""
-        Customer message: {delimiter}{user_input}{delimiter}
-        Agent response: {delimiter}{final_response}{delimiter}
+        # # Step 5: Ask the model if the response answers the initial user query well
+        # user_message = f"""
+        # Customer message: {delimiter}{user_input}{delimiter}
+        # Agent response: {delimiter}{final_response}{delimiter}
 
-        Does the response answer the question or ask for more information? Reply with Yes or No and then a reason.
-        """
-        messages = [
-            {'role': 'system', 'content': system_message},
-            {'role': 'user', 'content': user_message}
-        ]
-        evaluation_response = self.ChatModel.get_completion_from_messages(messages)
-        if debug: print(f"Step 5: Model evaluated the response. ")
+        # Does the response answer the question or ask for more information? Reply with Yes or No and then a reason.
+        # """
+        # messages = [
+        #     {'role': 'system', 'content': system_message},
+        #     {'role': 'user', 'content': user_message}
+        # ]
+        # evaluation_response = self.ChatModel.get_completion_from_messages(messages)
+        # if debug: print(f"Step 5: Model evaluated the response. ")
 
-        # Step 6: If yes, use this answer; if not, say that you will connect the user to a human
-        if "Y" in evaluation_response:  # Using "in" instead of "==" to be safer for model output variation (e.g., "Y." or "Yes")
-            if debug: print("Step 6: Model approved the response.")
-            return final_response, self.startMessageStack
-        else:
-            if debug: print(f"Step 6: Model disapproved the response. {final_response, evaluation_response}")
-            neg_str = "I'm unable to provide the information you're looking for. I'll connect you with a human representative for further assistance."
-            return neg_str, self.startMessageStack
+        # # Step 6: If yes, use this answer; if not, say that you will connect the user to a human
+        # if "Y" in evaluation_response:  # Using "in" instead of "==" to be safer for model output variation (e.g., "Y." or "Yes")
+        #     if debug: print("Step 6: Model approved the response.")
+        #     return final_response, self.startMessageStack
+        # else:
+        #     if debug: print(f"Step 6: Model disapproved the response. {final_response, evaluation_response}")
+        #     neg_str = "I'm unable to provide the information you're looking for. I'll connect you with a human representative for further assistance."
+        #     return neg_str, self.startMessageStack
+
+        return final_response, self.startMessageStack

@@ -8,6 +8,5 @@ encrypt = yes
 
 
 [openai]
-api_key = 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
 org = xxxx
 

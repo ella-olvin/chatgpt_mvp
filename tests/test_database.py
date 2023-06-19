@@ -1,11 +1,14 @@
 import sys
-sys.path.append("/Users/ella/GIT_REPOS/chatgpt")
+sys.path.append("/Users/ella/GIT_REPOS/chatgpt_mvp_v1")
 from chatbot.database import AccessDatabase
+from chatbot.chatgpt import ChatGPT
 from utils import *
-
+import re 
 
 if __name__ == "__main__":
     database = AccessDatabase()
+    ChatModel = ChatGPT()
+
     previous_messages = [
 {'role': 'user', 'content': '####How do you generate your foot traffic data?####'},
 {'role': 'assistant', 'content': '{"primary":"Data Generation and Characteristics", "secondary":"Data accuracy"}'},
@@ -18,24 +21,16 @@ if __name__ == "__main__":
 {'role': 'assistant', 'content': 'For information on data accuracy, please visit www.olvindataaccuracy.com.'}
 ]
     user_messages = [
-        "Interesting. Can you tell me what the busiest grocery store in Manhattan is?",
+        "Interesting. Can you tell me what the busiest grocery store in soho is?",
         "OK, how did Uniqlo do last quarter compared to the same quarter last year?",
-        "yes",
-        "How many visits were that to Walmart last year?"]
+        # "yes",
+        "How many visits were that to Walmart last year?",
+        "what was the best restaurant to visit in LA in 2021?"]
     
     for message in user_messages:
-        messages = [ {'role': 'system', 'content': SQL_SYSTEM_MESSAGE.strip()} ] + previous_messages + [{'role': 'user', 'content': message}]
-        sql_query, messages = database.get_query(messages, counter=0)
-        print(f"\n{message} \n {sql_query['message']}")
-        break
-    
-    # correct = 0
-    # for message, answer in user_messages:
-    #     result = controller.classify_user_message(message)[0]
-    #     print(f"\n\n{message}, \n {result}")
-    #     if answer == result:
-    #         correct += 1
-    #     count += 1
         
-    # print(f"Accuracy: {correct/count * 100} % ")
-    #     # print(f"\n\n{message}, \n {controller.classify_user_message(message)[0]}")
+        print(message)
+        # messages = [ {'role': 'system', 'content': SQL_SYSTEM_MESSAGE.strip()} ] + previous_messages + [{'role': 'user', 'content': message}]
+        evaluation_response, final_output = database.query_db(message, previous_messages)
+        print(evaluation_response, final_output)
+      

@@ -1,12 +1,13 @@
-import openai
+import openai, os
 import configparser
 import time
 config = configparser.ConfigParser()
 config.read("config.ini.default")
 
-openai_api_key = config.get("openai", "api_key")
-openai.api_key = "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"
-openai_org = config.get("openai", "org")
+from dotenv import load_dotenv, find_dotenv
+_ = load_dotenv(find_dotenv()) # read local .env file
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class ChatGPT:
     def __init__(self):
