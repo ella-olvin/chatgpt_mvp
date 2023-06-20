@@ -1,10 +1,10 @@
 import sys
-sys.path.append("/Users/ella/GIT_REPOS/chatgpt")
-from chatbot.controller import Controller
+sys.path.append("/Users/ella/GIT_REPOS/chatgpt_mvp_v1")
+from chatbot.classifier import Classifier
 from utils import *
 
 if __name__ == "__main__":
-    controller = Controller(system_message=CLASSIFIER_SYSTEM_MESSAGE)
+    controller = Classifier(system_message=CLASSIFIER_SYSTEM_MESSAGE)
     user_messages = [
         ("How do you generate your foot traffic data?", {'primary': 'Data Generation and Characteristics', 'secondary': 'Data accuracy'}),
         ("How many retails stores do you have data for and how many devices do you analyze?", {'primary': 'Data Generation and Characteristics', 'secondary': 'Data volumes'}),

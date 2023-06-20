@@ -19,13 +19,9 @@ class AccessDatabase:
                             .replace("llm_mvp.SGPlaceRaw.name", "SGPlaceRaw.name")
                         ))  
 
-    def call_bigquery(self, message, counter=0):
-        if counter > 2:
-            return None
-        try:
-            return (list(client.query(message).to_dataframe().values.flatten()))
-        except Exception as e:
-            return [] #self.call_bigquery(f"That query failed with this error please try again:{str(e)}", counter=counter+1)
+    def call_bigquery(self, message):
+        return (list(client.query(message).to_dataframe().values.flatten()))
+    
 
     def check_output(self, messages, responseString, counter):
         if counter > 3:
@@ -85,7 +81,6 @@ class AccessDatabase:
     def get_bigquery_output(self, messages, response, counter, pattern):
         if counter > 2:
             return (None, None)
-
         try:
             return ' '.join([str(element)for element in (self.call_bigquery(response["message_append_cte"]))])[:400]
         except Exception as e:
@@ -94,8 +89,26 @@ class AccessDatabase:
             else:
                 return self.get_bigquery_output(messages, response, counter+1)
         
-    def query_db(self,  message, previous_messages, counter=0, delimiter="####", pattern=r"####(.*?)####"):
+    def query_database(self,  messages, counter, pattern=r"####(.*?)####", ):  
+        # try SQL query
+        if counter > 2:
+            return [], [], messages
         
+        sql_query, messages = self.get_query(messages, pattern, counter)
+        if sql_query:
+            full_query = self.append_cte_to_dynamic_query(sql_query)
+        else:
+            return [], [], messages 
+
+        try:
+            final_output = self.call_bigquery(full_query)
+            return final_output, sql_query, messages
+        except Exception as e:
+            messages = messages + [{"role": "assistant", "content": sql_query}] +[{"role": "user", "content": f"That query failed with this error please try again:{str(e)}"}]
+            return self.query_database(messages, counter=counter+1)
+
+    
+    def run_database(self, message, previous_messages, debug, counter=0, delimiter="####", pattern=r"####(.*?)####"):
         # Add new message
         if counter == 0:
             # on first instance use all messages to system message
@@ -106,24 +119,26 @@ class AccessDatabase:
         else: 
             return "Failed to create valid SQL query", ""
 
-        sql_query, messages = self.get_query(messages, pattern, counter=0)
-        full_query = self.append_cte_to_dynamic_query(sql_query)
-        final_output = self.call_bigquery(full_query)
-
-        if not final_output:
+        # try SQL query
+        sql_output, sql_query, messages = self.query_database(messages, counter=0)
+        
+        if not sql_query:
+            # can't create a query - need a fallback
+            return [],[],[]
+        elif not sql_output:
+            # the sql_output returns null so check the filter from the query
             db_output, response_str = self.analyse_query_filters(sql_query, pattern)
         else:
             db_output = []
 
         system_message =  f"""You are a customer service assistant informing a customer of the result in response to their query. 
+        If the result is null then direct the user to a sales representative. Do not say that there is no data available for their request. 
         If a result has been found use as much information from the query sent to the database when describing the answer, for example specify the location, date and category queried.
-        If no result has been found please explain why this is using the information provided.
-        Always try to direct the customer to a sales representative. 
         """ 
         messages = [
             {'role': 'system', 'content': system_message},
             {'role': 'user', 'content':  f"""Customer initial message: {delimiter}{message}{delimiter}"""},
-              {'role': 'assistant', 'content': f"""Query sent to database: {delimiter}{sql_query}{delimiter}"""}]
+            {'role': 'assistant', 'content': f"""Query sent to database: {delimiter}{sql_query}{delimiter}"""}]
         
         if db_output:
             # where conditions aren't satisfied
@@ -131,7 +146,7 @@ class AccessDatabase:
             {'role': 'assistant', 'content': f"""No response was found because these conditions returned null: {delimiter}{db_output}{delimiter}"""},
             ]
         
-        elif not final_output:
+        elif not sql_output:
              #combinations of conditions doesn't have any result
             messages =  messages + [
             {'role': 'assistant', 'content': f"""No response was found because although the individual conditions were satisfied a combination of the conditions {delimiter}{' '.join(response_str)}{delimiter} doesn't give any results"""},
@@ -139,10 +154,12 @@ class AccessDatabase:
         else:
             # result returned
             messages =  messages + [
-            {'role': 'assistant', 'content': f"""Result from query: {delimiter}{final_output}{delimiter}"""},
+            {'role': 'assistant', 'content': f"""Result from query: {delimiter}{sql_output}{delimiter}"""},
             ]
-        print("SQL query:", sql_query)
+
+        if debug:
+            print("SQL query:", sql_query)
         evaluation_response = self.ChatModel.get_completion_from_messages(messages)
         # print("Response:", evaluation_response)
-        return evaluation_response, sql_query, final_output
+        return evaluation_response, sql_query, sql_output
     

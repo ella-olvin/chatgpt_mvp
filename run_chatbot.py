@@ -12,9 +12,9 @@ def run_stored_messages(debug):
         "OK, how did Uniqlo do last quarter compared to the same quarter last year?",
         "yes",
         "how old am I?",
-        "How many visits were that to Walmart lasy "]
+        "How many visits were that to Walmart last year"]
 
-    controller = Controller(CLASSIFIER_SYSTEM_MESSAGE)
+    controller = Controller()
 
     for user_message in user_messages:
         print("\n Question: ", user_message)
@@ -22,7 +22,7 @@ def run_stored_messages(debug):
         print(f" ChatGPT: {response}")
 
 def run_interactive(debug):      
-    controller = Controller(CLASSIFIER_SYSTEM_MESSAGE)
+    controller = Controller()
     print("Ask any question about the data. Enter 'q' to quit. Enter 'r' to reset ChatGPT.")
     while True:
         user_input = input(" Question: ")

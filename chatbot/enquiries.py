@@ -5,15 +5,10 @@ class GeneralEnquiry:
     def __init__(self):
         self.ChatModel = ChatGPT()
 
-    def general_enquiry(self, user_message, assistant_message):
+    def general_enquiry(self, user_message, messageStack):
     
-        messages =  [  
-        {'role':'system',
-        'content': GENERAL_ENQUIRY_SYSTEM_MESSAGE},   
+        messages =  messageStack + [     
         {'role':'user',
-        'content': user_message},  
-        {'role':'assistant',
-        'content': f"""Relevant previous information \
-        {assistant_message}"""},   
+        'content': user_message},   
         ]
         return self.ChatModel.get_completion_from_messages(messages)

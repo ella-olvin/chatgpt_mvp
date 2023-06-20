@@ -23,7 +23,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "args":["test", "--debug"]
+            "args":["run", "--debug"]
             // "args": ["run"]
         }
     ]

@@ -31,6 +31,6 @@ if __name__ == "__main__":
         
         print(message)
         # messages = [ {'role': 'system', 'content': SQL_SYSTEM_MESSAGE.strip()} ] + previous_messages + [{'role': 'user', 'content': message}]
-        evaluation_response, final_output = database.query_db(message, previous_messages)
-        print(evaluation_response, final_output)
+        evaluation_response, sql_query, sql_output = database.run_database(message, previous_messages)
+        print(evaluation_response, sql_output)
       
