@@ -59,6 +59,25 @@ class AccessDatabase:
   
         return db_output, response_str
 
+    def analyse_query_filters(self, response_str, pattern):
+        # check where conditions
+        messages = [ {'role': 'system', 'content': WHERE_CONDITIONS_SYSTEM_MESSAGES.strip()} ] + [{'role': 'user', 'content': response_str}]
+        responseString = self.ChatModel.get_completion_from_messages(messages)
+        response_str = re.findall(pattern, responseString, re.DOTALL)
+        
+        # query the db
+        db_output = []
+        for where_condition_query in response_str:
+            appended_where_condition =self.append_cte_to_dynamic_query(where_condition_query)
+            try:
+                output = self.call_bigquery(appended_where_condition)
+            except Exception as e: 
+                output = []
+            if not len(output):
+                db_output.append(f"{where_condition_query} returns null")
+  
+        return db_output, response_str
+
     def get_query(self, messages, pattern, counter=0):
         
         if counter > 2:

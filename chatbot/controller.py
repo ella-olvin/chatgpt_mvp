@@ -19,10 +19,11 @@ class Controller:
         self.ClassifierMessageStack = [  {'role':'system', 
                                      'content':self.Classifier.system_message}]
 
-    def hardcode_incorrect_response(self, hc_response=None):
-        if hc_response is None:
-            hc_response = {"primary": "Fallback response", "secondary": "miscellaneous"}
-        return hc_response, f"'{hc_response}'"
+            
+    def reset(self):
+        self.startMessageStack = [ {'role':'system', 
+                                     'content':GENERAL_ENQUIRY_SYSTEM_MESSAGE}]
+        print('model was reset to initial state')
  
     def add_to_message_stack(self, message, sender):
         if sender=='assistant':

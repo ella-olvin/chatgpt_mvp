@@ -13,6 +13,7 @@ class ChatGPT:
     def __init__(self):
        pass
     
+
     def get_completion_from_messages(self, messages, 
                                     model="gpt-3.5-turbo", 
                                     temperature=0, 

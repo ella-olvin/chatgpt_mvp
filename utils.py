@@ -52,7 +52,7 @@ SQL_SYSTEM_MESSAGE = """
             Information about the database:
               1. There are two tables available for querying: SGPlaceRaw and SGPlaceDailyVisitsRaw. 
               2. The SGPlaceRaw table contains the columns fk_sgplaces, name, top_category, street_address, region, city, and postal_code. \
-                  The region field uses suffixes like 'ny', 'ct', or 'ma'. All string columns are lowercase. \
+                  The region field uses suffixes like 'ny', 'ct', or 'ma'. All string columns are lowercase. Do not filter by both region and city in the same query as it will return null. \
               3. The SGPlaceDailyVisitsRaw table includes the columns fk_sgplaces, local_date, and visits. \
               4. To join the tables, use the fk_sgplaces column. \
               5. When creating queries, use the stem of a place's name to increase the chances of matching results. \
