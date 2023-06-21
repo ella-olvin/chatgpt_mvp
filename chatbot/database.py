@@ -59,32 +59,12 @@ class AccessDatabase:
   
         return db_output, response_str
 
-    def analyse_query_filters(self, response_str, pattern):
-        # check where conditions
-        messages = [ {'role': 'system', 'content': WHERE_CONDITIONS_SYSTEM_MESSAGES.strip()} ] + [{'role': 'user', 'content': response_str}]
-        responseString = self.ChatModel.get_completion_from_messages(messages)
-        response_str = re.findall(pattern, responseString, re.DOTALL)
-        
-        # query the db
-        db_output = []
-        for where_condition_query in response_str:
-            appended_where_condition =self.append_cte_to_dynamic_query(where_condition_query)
-            try:
-                output = self.call_bigquery(appended_where_condition)
-            except Exception as e: 
-                output = []
-            if not len(output):
-                db_output.append(f"{where_condition_query} returns null")
-  
-        return db_output, response_str
-
     def get_query(self, messages, pattern, counter=0):
         
         if counter > 2:
             return (None, None)
         responseString = self.ChatModel.get_completion_from_messages(messages)
 
-        # extract query from between delimiters #### 
         try:
             response_str = re.findall(pattern, responseString, re.DOTALL)[0]
         except Exception as e:
@@ -144,31 +124,22 @@ class AccessDatabase:
         if not sql_query:
             # can't create a query - need a fallback
             return [],[],[]
-        elif not sql_output:
-            # the sql_output returns null so check the filter from the query
-            db_output, response_str = self.analyse_query_filters(sql_query, pattern)
-        else:
-            db_output = []
 
         system_message =  f"""You are a customer service assistant informing a customer of the result in response to their query. 
-        If the result is null then direct the user to a sales representative. Do not say that there is no data available for their request. 
+        Do not say that there is no data available for their request. 
         If a result has been found use as much information from the query sent to the database when describing the answer, for example specify the location, date and category queried.
         """ 
         messages = [
             {'role': 'system', 'content': system_message},
             {'role': 'user', 'content':  f"""Customer initial message: {delimiter}{message}{delimiter}"""},
-            {'role': 'assistant', 'content': f"""Query sent to database: {delimiter}{sql_query}{delimiter}"""}]
+            {'role': 'assistant', 'content': f"""{sql_query}"""}]
         
-        if db_output:
-            # where conditions aren't satisfied
-            messages = messages + [   
-            {'role': 'assistant', 'content': f"""No response was found because these conditions returned null: {delimiter}{db_output}{delimiter}"""},
-            ]
         
-        elif not sql_output:
+        if not sql_output:
              #combinations of conditions doesn't have any result
             messages =  messages + [
-            {'role': 'assistant', 'content': f"""No response was found because although the individual conditions were satisfied a combination of the conditions {delimiter}{' '.join(response_str)}{delimiter} doesn't give any results"""},
+            {'role': 'user', 'content': f"""The previous query returned null. \
+                    Explain in natural language what has been queried and ask the user to rephrase their query if this is not correct."""},
             ]
         else:
             # result returned

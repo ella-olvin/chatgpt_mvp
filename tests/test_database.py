@@ -37,12 +37,16 @@ if __name__ == "__main__":
             messages_2 = [messages[0]] + [{'role': 'user', 'content': message}]+ [ {'role': 'assistant', 'content': sql_query} ] + \
                 [ {'role': 'user', 'content': \
                    'The previous query returned null. \
-                    Create new shorter queries that check if this is because of the filters used for location, category or the date. \
-                    Each query must be surrounded by delimiters ####'} ]
+                    Explain in natural language what has been queried and ask the user to rephrase their query if this is not correct.'} ]
             sql_query = database.ChatModel.get_completion_from_messages(messages_2)
           
             print(sql_query)
-            messages_3 = messages_2 + [ {'role': 'assistant', 'content': sql_query}]
+            messages_3 = messages_2 + [ {'role': 'assistant', 'content': sql_query}] + \
+            [ {'role': 'user', 'content': 'Please can you only filter by manhattan not ny'}] 
+            
+            # full_query = database.append_cte_to_dynamic_query(sql_query)
+            final_output = database.call_bigquery(sql_query)
+        sql_query = database.ChatModel.get_completion_from_messages(messages_2)
             queries = [x for x in sql_query.split("````") if x.startswith("SELECT")]
             for query in queries: 
                 full_query = database.append_cte_to_dynamic_query(sql_query)

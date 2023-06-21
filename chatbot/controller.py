@@ -37,7 +37,7 @@ class Controller:
             case "Data Queries and Insights":
                 # BigQuery
                 final_response, sql_query, sql_output = self.AccessDB.run_database(user_input, [d for d in self.startMessageStack[:-1] if d['role'] != 'system'], debug)
-                if not sql_output:
+                if not sql_query:
                     # Direct to documentation if no output from SQL
                     response["primary"] = "Data Generation and Characteristics"
                     return self.direct_user_message(user_input, response, debug)
