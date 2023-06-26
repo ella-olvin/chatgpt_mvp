@@ -2,3 +2,4 @@ data/*
 *.log
 .env
 chatbot/__py*
+*__pycache__*
