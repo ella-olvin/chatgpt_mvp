@@ -3,3 +3,6 @@ data/*
 .env
 chatbot/__py*
 *__pycache__*
+
+poetry.lock
+.python-version
