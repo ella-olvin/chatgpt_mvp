@@ -42,20 +42,17 @@ class Controller:
                     response["primary"] = "Data Generation and Characteristics"
                     return self.direct_user_message(user_input, response, debug)
                 else:
-                    system_message = SQL_SYSTEM_MESSAGE
                     self.add_to_message_stack(sql_query, "user")
             case "Data Generation and Characteristics":
                 # Send link to documentation
                 final_response = self.ProductDoc.product_documentation(user_input, response)
-                system_message = PRODUCT_DOCUMENTATION_SYSTEM_MESSAGE.strip()
             case "General Inquiry" | "Fallback response":
                 final_response = self.GeneralEnquiry.general_enquiry(user_input, self.startMessageStack)
-                system_message = GENERAL_ENQUIRY_SYSTEM_MESSAGE.strip()
             case _:
                 final_response ="I'm unable to provide the information you're looking for. Please contact Dylan at dylan@olvin.com."
-                system_message = ""
+          
 
-        return final_response, system_message
+        return final_response
 
     def process_user_message(self, user_input, debug=True):
         
@@ -76,7 +73,7 @@ class Controller:
         if debug: print(f"Step 2: User message classified. \n Classification: {response}")
         
         # Step 3: If message classified then answer the question
-        final_response, system_message = self.direct_user_message(user_input, response, debug)
+        final_response = self.direct_user_message(user_input, response, debug)
 
         self.add_to_message_stack(final_response, "assistant")
         if debug: print("Step 3: Got response to question.")

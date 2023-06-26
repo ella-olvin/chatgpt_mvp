@@ -57,7 +57,7 @@ SQL_SYSTEM_MESSAGE = """
               4. To join the tables, use the fk_sgplaces column. \
               5. When creating queries, use the stem of a place's name to increase the chances of matching results. \
               6. Use 'LIKE' instead of '=' in WHERE conditions for better matching probabilities. 
-              7. The current year is 2023. 
+              7. The current year is 2023 and all data is from the United States. 
             The whole query must be surrounded by delimiters #### like the example below:
 
             Q: What is the number of visits to McDonald's in 2022?

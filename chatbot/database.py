@@ -1,4 +1,4 @@
-from utils import EXPLODE_DAILY_VISITS, SQL_SYSTEM_MESSAGE, WHERE_CONDITIONS_SYSTEM_MESSAGES
+from utils import EXPLODE_DAILY_VISITS, SQL_SYSTEM_MESSAGE
 from google.cloud import bigquery
 client = bigquery.Client()
 from chatbot.chatgpt import ChatGPT
@@ -8,7 +8,16 @@ import json, re
 class AccessDatabase:
     def __init__(self):
         self.ChatModel = ChatGPT()
+        self.distinct_column_values = self.get_distinct_column_values(['top_category', 'region'], 'llm_mvp.SGPlaceRaw')
         
+    
+    def get_distinct_column_values(self, columns, table):
+        x=[]
+        for column in columns:
+            bq = self.call_bigquery(f"SELECT distinct {column} from {table}")[:500]
+            bq_as_string = f"These are the distinct values in column {column}: {','.join(bq)} Make sure you only use these values as filters when you use WHERE {column} == ''. "
+            x.append(bq_as_string)
+        return x
     
     def append_cte_to_dynamic_query(self, message):
         # need to make this dynamic 
@@ -39,25 +48,7 @@ class AccessDatabase:
                     "content": "Please repeat that answer but use valid JSON only"} ] 
                 responseString = self.ChatModel.get_completion_from_messages(messages)
                 return self.check_output(messages, responseString, counter=counter+1)
-    
-    def analyse_query_filters(self, response_str, pattern):
-        # check where conditions
-        messages = [ {'role': 'system', 'content': WHERE_CONDITIONS_SYSTEM_MESSAGES.strip()} ] + [{'role': 'user', 'content': response_str}]
-        responseString = self.ChatModel.get_completion_from_messages(messages)
-        response_str = re.findall(pattern, responseString, re.DOTALL)
-        
-        # query the db
-        db_output = []
-        for where_condition_query in response_str:
-            appended_where_condition =self.append_cte_to_dynamic_query(where_condition_query)
-            try:
-                output = self.call_bigquery(appended_where_condition)
-            except Exception as e: 
-                output = []
-            if not len(output):
-                db_output.append(f"{where_condition_query} returns null")
-  
-        return db_output, response_str
+
 
     def get_query(self, messages, pattern, counter=0):
         
@@ -112,6 +103,8 @@ class AccessDatabase:
         if counter == 0:
             # on first instance use all messages to system message
             messages = [ {'role': 'system', 'content': SQL_SYSTEM_MESSAGE.strip()} ] + previous_messages + [{'role': 'user', 'content': message}]
+            messages = messages + [({"role": "user", "content": ' '.join(self.distinct_column_values)})]
+
         elif counter <=5:
             # on all other instances only add newest message so chatgpt knows what to correct
             messages = previous_messages + [{'role': 'user', 'content': message}]
