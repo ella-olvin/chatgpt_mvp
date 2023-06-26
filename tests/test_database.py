@@ -46,7 +46,7 @@ if __name__ == "__main__":
             
             # full_query = database.append_cte_to_dynamic_query(sql_query)
             final_output = database.call_bigquery(sql_query)
-        sql_query = database.ChatModel.get_completion_from_messages(messages_2)
+            sql_query = database.ChatModel.get_completion_from_messages(messages_2)
             queries = [x for x in sql_query.split("````") if x.startswith("SELECT")]
             for query in queries: 
                 full_query = database.append_cte_to_dynamic_query(sql_query)
