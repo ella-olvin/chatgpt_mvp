@@ -24,10 +24,10 @@ This repository contains a ChatGPT Minimum Viable Product (MVP) implementation t
    ```bash
    git clone https://github.com/ella-olvin/chatgpt_mvp.git
    
-2. Install the required Python dependencies:
+2. Install the required Python dependencies. This creates a conda env called `chatgpt_sql` :
     ```bash
-    pip install -r requirements.txt
-
+    conda env create -f environment_chatgpt_sql.yml
+   
 3. Create a `.env` file locally to save your OpenAI API credentials like this `OPENAI_API_KEY = {API_KEY}`
 
 Note:  `.env` is currently included in `.gitignore` because if you push it to git the API key will be deactivated for security reasons. 
