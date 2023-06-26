@@ -30,6 +30,8 @@ This repository contains a ChatGPT Minimum Viable Product (MVP) implementation t
    
 3. Create a `.env` file locally to save your OpenAI API credentials like this `OPENAI_API_KEY = {API_KEY}`
 
+4. You may need to run `gcloud auth application-default login` to be able to access BigQuery. 
+
 Note:  `.env` is currently included in `.gitignore` because if you push it to git the API key will be deactivated for security reasons. 
 
 ## Methodology
