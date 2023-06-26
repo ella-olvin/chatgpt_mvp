@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "chatgpt-mvp"
+version = "0.1.0"
+description = ""
+authors = ["Alfonso <alfonso@olvin.com>"]
+readme = "README.md"
+packages = [{include = "chatgpt_mvp"}]
+
+[tool.poetry.dependencies]
+python = "^3.10.2"
+openai = "^0.27.8"
+python-dotenv = "^1.0.0"
+google-cloud-bigquery = "^3.11.2"
+pandas = "^2.0.2"
+db-dtypes = "^1.1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
